@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Loader2, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Loader2, AlertCircle, User, Calendar, Clock } from 'lucide-react';
 import { createConversation, endConversation } from '../api';
+import { IConversation } from '../types';
 
 const MockInterview: React.FC = () => {
   const navigate = useNavigate();
-  const [conversationUrl, setConversationUrl] = useState<string>('');
-  const [conversationId, setConversationId] = useState<string>('');
+  const [conversation, setConversation] = useState<IConversation | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>('');
   const [isEnding, setIsEnding] = useState(false);
@@ -38,16 +38,15 @@ const MockInterview: React.FC = () => {
       setError('');
       
       console.log('Creating Tavus conversation...');
-      const conversation = await createConversation();
+      const conversationData = await createConversation();
       
-      console.log('Conversation created:', conversation);
+      console.log('Conversation created:', conversationData);
       
-      if (conversation.conversation_url) {
-        setConversationUrl(conversation.conversation_url);
-        setConversationId(conversation.conversation_id);
-        conversationIdRef.current = conversation.conversation_id; // Store in ref for cleanup
+      if (conversationData.conversation_url && conversationData.conversation_id) {
+        setConversation(conversationData);
+        conversationIdRef.current = conversationData.conversation_id; // Store in ref for cleanup
       } else {
-        throw new Error('No conversation URL received from Tavus API');
+        throw new Error('Invalid conversation data received from Tavus API');
       }
     } catch (err: any) {
       console.error('Error creating conversation:', err);
@@ -61,8 +60,8 @@ const MockInterview: React.FC = () => {
     try {
       setIsEnding(true);
       
-      if (conversationId || conversationIdRef.current) {
-        const idToEnd = conversationId || conversationIdRef.current;
+      if (conversation?.conversation_id || conversationIdRef.current) {
+        const idToEnd = conversation?.conversation_id || conversationIdRef.current;
         console.log('Ending conversation:', idToEnd);
         await endConversation(idToEnd);
         conversationIdRef.current = ''; // Clear the ref
@@ -81,13 +80,20 @@ const MockInterview: React.FC = () => {
     // Reset the initialization flag and try again
     hasInitialized.current = false;
     setError('');
-    setConversationUrl('');
-    setConversationId('');
+    setConversation(null);
     conversationIdRef.current = '';
     
     // Re-initialize
     hasInitialized.current = true;
     initializeInterview();
+  };
+
+  const formatDate = (dateString: string) => {
+    try {
+      return new Date(dateString).toLocaleString();
+    } catch {
+      return dateString;
+    }
   };
 
   if (loading) {
@@ -149,7 +155,9 @@ const MockInterview: React.FC = () => {
             <div className="h-6 w-px bg-gray-600"></div>
             <div className="flex items-center gap-3">
               <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
-              <span className="text-white font-medium">Mock Interview - Tavus AI</span>
+              <span className="text-white font-medium">
+                {conversation?.conversation_name || 'Mock Interview - Tavus AI'}
+              </span>
             </div>
           </div>
           
@@ -170,11 +178,36 @@ const MockInterview: React.FC = () => {
         </div>
       </div>
 
+      {/* Interview Context Info */}
+      {conversation && (
+        <div className="bg-gray-800/50 border-b border-gray-700 px-6 py-3">
+          <div className="flex items-center justify-between text-sm">
+            <div className="flex items-center gap-6 text-gray-300">
+              <div className="flex items-center gap-2">
+                <User size={16} />
+                <span>Session: {conversation.conversation_id}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Calendar size={16} />
+                <span>Started: {formatDate(conversation.created_at)}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Clock size={16} />
+                <span className="capitalize">Status: {conversation.status}</span>
+              </div>
+            </div>
+            <div className="text-gray-400">
+              <span>Replica: {conversation.replica_id}</span>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Tavus AI Interview iframe */}
       <div className="flex-1 relative">
-        {conversationUrl ? (
+        {conversation?.conversation_url ? (
           <iframe
-            src={conversationUrl}
+            src={conversation.conversation_url}
             allow="camera; microphone; fullscreen; display-capture"
             style={{ 
               width: '100%', 
@@ -203,6 +236,12 @@ const MockInterview: React.FC = () => {
             <span>Powered by Tavus AI</span>
             <span>•</span>
             <span>Real-time AI Interview Coaching</span>
+            {conversation?.persona_id && (
+              <>
+                <span>•</span>
+                <span>Persona: {conversation.persona_id}</span>
+              </>
+            )}
           </div>
           <div className="flex items-center gap-2">
             <div className="w-2 h-2 bg-green-500 rounded-full"></div>
