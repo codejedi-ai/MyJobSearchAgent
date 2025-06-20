@@ -13,6 +13,7 @@ import RegisterForm from './components/auth/RegisterForm';
 import ForgotPassword from './components/auth/ForgotPassword';
 import VerifyPhone from './components/auth/VerifyPhone';
 import Dashboard from './components/dashboard/DashboardMain';
+import MockInterview from './components/MockInterview';
 import { useAuth } from './hooks/useAuth';
 
 function App() {
@@ -31,6 +32,7 @@ function App() {
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/verify-phone" element={<VerifyPhone />} />
         <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/mock-interview" element={<MockInterview />} />
         <Route
           path="/"
           element={
