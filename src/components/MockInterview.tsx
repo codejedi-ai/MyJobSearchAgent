@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Loader2, AlertCircle } from 'lucide-react';
 import { createConversation, endConversation } from '../api';
@@ -10,17 +10,27 @@ const MockInterview: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>('');
   const [isEnding, setIsEnding] = useState(false);
+  
+  // Use ref to prevent double API calls in React Strict Mode
+  const hasInitialized = useRef(false);
+  const conversationIdRef = useRef<string>('');
 
   useEffect(() => {
+    // Prevent double initialization in React Strict Mode
+    if (hasInitialized.current) {
+      return;
+    }
+    
+    hasInitialized.current = true;
     initializeInterview();
     
     // Cleanup function to end conversation when component unmounts
     return () => {
-      if (conversationId) {
-        endConversation(conversationId).catch(console.error);
+      if (conversationIdRef.current) {
+        endConversation(conversationIdRef.current).catch(console.error);
       }
     };
-  }, []);
+  }, []); // Empty dependency array - runs only once
 
   const initializeInterview = async () => {
     try {
@@ -35,6 +45,7 @@ const MockInterview: React.FC = () => {
       if (conversation.conversation_url) {
         setConversationUrl(conversation.conversation_url);
         setConversationId(conversation.conversation_id);
+        conversationIdRef.current = conversation.conversation_id; // Store in ref for cleanup
       } else {
         throw new Error('No conversation URL received from Tavus API');
       }
@@ -50,9 +61,11 @@ const MockInterview: React.FC = () => {
     try {
       setIsEnding(true);
       
-      if (conversationId) {
-        console.log('Ending conversation:', conversationId);
-        await endConversation(conversationId);
+      if (conversationId || conversationIdRef.current) {
+        const idToEnd = conversationId || conversationIdRef.current;
+        console.log('Ending conversation:', idToEnd);
+        await endConversation(idToEnd);
+        conversationIdRef.current = ''; // Clear the ref
       }
       
       // Navigate back to dashboard
@@ -65,6 +78,15 @@ const MockInterview: React.FC = () => {
   };
 
   const handleRetry = () => {
+    // Reset the initialization flag and try again
+    hasInitialized.current = false;
+    setError('');
+    setConversationUrl('');
+    setConversationId('');
+    conversationIdRef.current = '';
+    
+    // Re-initialize
+    hasInitialized.current = true;
     initializeInterview();
   };
 
