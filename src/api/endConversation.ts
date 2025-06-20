@@ -1,31 +1,29 @@
-export const endConversation = async (
-  token: string,
-  conversationId: string,
-) => {
+export const endConversation = async (conversationId: string) => {
+  // Get API key from environment
+  const token = import.meta.env.VITE_TAVUS_API_KEY;
+  
+  if (!token) {
+    throw new Error('VITE_TAVUS_API_KEY is not configured in environment variables');
+  }
+
   try {
-    console.log('Ending conversation:', conversationId);
-    
     const response = await fetch(
       `https://tavusapi.com/v2/conversations/${conversationId}/end`,
       {
         method: "POST",
         headers: {
-          "x-api-key": token ?? "",
+          "x-api-key": token,
         },
       },
     );
 
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Tavus API error ending conversation:', response.status, errorText);
-      throw new Error(`Failed to end conversation: ${response.status} - ${errorText}`);
+      throw new Error("Failed to end conversation");
     }
 
-    const data = await response.json();
-    console.log('Conversation ended successfully:', data);
-    return data;
+    return null;
   } catch (error) {
-    console.error("Error ending conversation:", error);
+    console.error("Error:", error);
     throw error;
   }
 };

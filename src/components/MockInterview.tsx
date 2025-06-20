@@ -11,15 +11,13 @@ const MockInterview: React.FC = () => {
   const [error, setError] = useState<string>('');
   const [isEnding, setIsEnding] = useState(false);
 
-  const TAVUS_API_KEY = '516cc6e75da04dcab4793519fe26ee1f';
-
   useEffect(() => {
     initializeInterview();
     
     // Cleanup function to end conversation when component unmounts
     return () => {
       if (conversationId) {
-        endConversation(TAVUS_API_KEY, conversationId).catch(console.error);
+        endConversation(conversationId).catch(console.error);
       }
     };
   }, []);
@@ -30,7 +28,7 @@ const MockInterview: React.FC = () => {
       setError('');
       
       console.log('Creating Tavus conversation...');
-      const conversation = await createConversation(TAVUS_API_KEY);
+      const conversation = await createConversation();
       
       console.log('Conversation created:', conversation);
       
@@ -54,7 +52,7 @@ const MockInterview: React.FC = () => {
       
       if (conversationId) {
         console.log('Ending conversation:', conversationId);
-        await endConversation(TAVUS_API_KEY, conversationId);
+        await endConversation(conversationId);
       }
       
       // Navigate back to dashboard
