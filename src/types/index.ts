@@ -1,10 +1,12 @@
 // Tavus API types
 export interface IConversation {
   conversation_id: string;
-  conversation_url: string;
+  conversation_name: string;
   status: string;
+  conversation_url: string;
+  replica_id: string;
+  persona_id: string;
   created_at: string;
-  updated_at: string;
 }
 
 // Settings types
