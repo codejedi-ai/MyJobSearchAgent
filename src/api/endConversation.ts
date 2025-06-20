@@ -3,6 +3,8 @@ export const endConversation = async (
   conversationId: string,
 ) => {
   try {
+    console.log('Ending conversation:', conversationId);
+    
     const response = await fetch(
       `https://tavusapi.com/v2/conversations/${conversationId}/end`,
       {
@@ -14,12 +16,16 @@ export const endConversation = async (
     );
 
     if (!response.ok) {
-      throw new Error("Failed to end conversation");
+      const errorText = await response.text();
+      console.error('Tavus API error ending conversation:', response.status, errorText);
+      throw new Error(`Failed to end conversation: ${response.status} - ${errorText}`);
     }
 
-    return null;
+    const data = await response.json();
+    console.log('Conversation ended successfully:', data);
+    return data;
   } catch (error) {
-    console.error("Error:", error);
+    console.error("Error ending conversation:", error);
     throw error;
   }
 };
