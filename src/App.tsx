@@ -32,7 +32,7 @@ function App() {
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/verify-phone" element={<VerifyPhone />} />
         <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/mock-interview" element={<MockInterview />} />
+        <Route path="/mock-interview" element={<React.StrictMode><MockInterview /></React.StrictMode>} />
         <Route
           path="/"
           element={
